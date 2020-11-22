@@ -23,18 +23,20 @@ interface IDepositContract {
 
 contract StakingPool {
     using SafeMath for uint256;
+
     address payable public owner;
     bool public finalized;
+
     uint256 public end;
     uint256 constant stake = 32 ether;
     uint256 public totalInvested;
     uint256 public totalChange; // replace Change by Extra
+    
     mapping (address => uint256) public balances;
     mapping (address => bool) public changeClaimed;
     mapping (bytes => bool) public pubkeysUsed; // pubkeys for Validators
-    IDepositContract public depositContract = IDepositContract(0x00000000219ab540356cBB839Cbe05303d7705Fa);
     
-
+    IDepositContract public depositContract = IDepositContract(0x00000000219ab540356cBB839Cbe05303d7705Fa);
     
     event NewInvestor (address investor);
     
@@ -48,11 +50,10 @@ contract StakingPool {
         if (balances[msg.sender] == 0) {
             emit NewInvestor(msg.sender);
         }
-        //uint256 fee = msg.value * 1 / 100;
         uint256 fee = msg.value.mul(15).div(1000);
         uint256 amountInvested = msg.value.sub(fee);
         owner.transfer(fee);
-        balances[msg.sender] += amountInvested; // TODO: safemath
+        balances[msg.sender] = balances[msg.sender].add(amountInvested);
     }
     
     // Once the period is over, this function will calculate the extra amount 
@@ -62,7 +63,6 @@ contract StakingPool {
         require(finalized == false, 'already finalized');
         finalized = true;
         totalInvested = address(this).balance;
-        //totalChange = address(this).balance % stake;
         totalChange = address(this).balance.mod(stake);
     }
     
